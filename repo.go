@@ -21,15 +21,8 @@ func RepoFindSchema(id string) Schema {
     return Schema{}
 }
 
-func RepoCreateSchema(s Schema) (sch Schema, err error) {
-    if len(s.Id) == 0 && len(s.Schema) == 0 {
-      sch = Schema{Id: "BAD"}
-      err = fmt.Errorf("Error creating schema")
-      return
-    }
+func RepoCreateSchema(s Schema) {
     schemas = append(schemas, s)
-    sch = s
-    return
 }
 
 func RepoDestroySchema(id string) error {

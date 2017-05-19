@@ -22,38 +22,54 @@ func SchemaIndex(w http.ResponseWriter, r *http.Request) {
 }
 
 func SchemaShow(w http.ResponseWriter, r *http.Request) {
+    action := "DownloadSchema"
     vars := mux.Vars(r)
+    id := vars["schemaId"]
     s := RepoFindSchema(vars["schemaId"])
+    if len(s.Id) == 0 {
+      w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+      w.WriteHeader(http.StatusNotFound)
+      res := ResponseWithMessage{Action: action, Status: "error", Id: id, Message: "No schema found"}
+      if err := json.NewEncoder(w).Encode(res); err != nil {
+        panic(err)
+      }
+      return
+    }
     w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-    w.WriteHeader(http.StatusCreated)
+    w.WriteHeader(http.StatusOK)
     if err := json.NewEncoder(w).Encode(s); err != nil {
         panic(err)
     }
 }
 
 func SchemaCreate(w http.ResponseWriter, r *http.Request) {
-    var schema Schema
-    body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1048576))
-    if err != nil {
-        panic(err)
-    }
-    if err := r.Body.Close(); err != nil {
-        panic(err)
-    }
-    if err := json.Unmarshal(body, &schema); err != nil {
-        w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-        w.WriteHeader(422) // unprocessable entity
-        if err := json.NewEncoder(w).Encode(err); err != nil {
-            panic(err)
-        }
-    }
-    s, err := RepoCreateSchema(schema)
-    if (err != nil) {
-      return
-    }
+  action := "UploadSchema"
+  vars := mux.Vars(r)
+  id := vars["schemaId"]
+  schema := Schema{Id: id}
+  body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1048576))
+  if err != nil {
+    panic(err)
+  }
+  if err := r.Body.Close(); err != nil {
+    panic(err)
+  }
+  var js map[string]interface{}
+  if err := json.Unmarshal(body, &js); err != nil {
     w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-    w.WriteHeader(http.StatusCreated)
-    if err := json.NewEncoder(w).Encode(s); err != nil {
-        panic(err)
+    w.WriteHeader(http.StatusUnprocessableEntity)
+    res := ResponseWithMessage{Action: action, Status: "error", Id: id, Message: "Invalid JSON provided"}
+    if err := json.NewEncoder(w).Encode(res); err != nil {
+      panic(err)
     }
+    return
+  }
+  schema.Schema = body
+  RepoCreateSchema(schema)
+  w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+  w.WriteHeader(http.StatusCreated)
+  res := Response{Action: action, Status: "success", Id: id}
+  if err := json.NewEncoder(w).Encode(res); err != nil {
+    panic(err)
+  }
 }

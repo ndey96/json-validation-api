@@ -33,7 +33,7 @@ var routes = Routes{
         Route{
         "SchemaCreate",
         "POST",
-        "/schemas",
+        "/schemas/{schemaId}",
         SchemaCreate,
     },
 }
