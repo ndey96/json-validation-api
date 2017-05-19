@@ -4,37 +4,40 @@ import "fmt"
 
 var currentId int
 
-var todos Todos
+var schemas Schemas
 
 // Give us some seed data
 func init() {
-    RepoCreateTodo(Todo{Name: "Write presentation"})
-    RepoCreateTodo(Todo{Name: "Host meetup"})
+  RepoCreateSchema(Schema{Id:"swag", Schema:[]byte(`{"Name":"Alice","Body":"Hello","Time":1294706395881547000}`)})
 }
 
-func RepoFindTodo(id int) Todo {
-    for _, t := range todos {
-        if t.Id == id {
-            return t
+func RepoFindSchema(id string) Schema {
+    for _, s := range schemas {
+        if s.Id == id {
+            return s
         }
     }
-    // return empty Todo if not found
-    return Todo{}
+    // return empty Schema if not found
+    return Schema{}
 }
 
-func RepoCreateTodo(t Todo) Todo {
-    currentId += 1
-    t.Id = currentId
-    todos = append(todos, t)
-    return t
+func RepoCreateSchema(s Schema) (sch Schema, err error) {
+    if len(s.Id) == 0 && len(s.Schema) == 0 {
+      sch = Schema{Id: "BAD"}
+      err = fmt.Errorf("Error creating schema")
+      return
+    }
+    schemas = append(schemas, s)
+    sch = s
+    return
 }
 
-func RepoDestroyTodo(id int) error {
-    for i, t := range todos {
-        if t.Id == id {
-            todos = append(todos[:i], todos[i+1:]...)
+func RepoDestroySchema(id string) error {
+    for i, s := range schemas {
+        if s.Id == id {
+            schemas = append(schemas[:i], schemas[i+1:]...)
             return nil
         }
     }
-    return fmt.Errorf("Could not find Todo with id of %d to delete", id)
+    return fmt.Errorf("Could not find Schema with id of %d to delete", id)
 }

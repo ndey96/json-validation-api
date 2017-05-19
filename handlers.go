@@ -7,37 +7,32 @@ import (
     "io"
     "io/ioutil"
     "github.com/gorilla/mux"
-    "strconv"
 )
 
 func Index(w http.ResponseWriter, r *http.Request) {
     fmt.Fprintln(w, "Welcome!")
 }
 
-func TodoIndex(w http.ResponseWriter, r *http.Request) {
+func SchemaIndex(w http.ResponseWriter, r *http.Request) {
     w.Header().Set("Content-Type", "application/json; charset=UTF-8")
     w.WriteHeader(http.StatusOK)
-    if err := json.NewEncoder(w).Encode(todos); err != nil {
+    if err := json.NewEncoder(w).Encode(schemas); err != nil {
         panic(err)
     }
 }
 
-func TodoShow(w http.ResponseWriter, r *http.Request) {
+func SchemaShow(w http.ResponseWriter, r *http.Request) {
     vars := mux.Vars(r)
-    todoId, todoIdErr := strconv.Atoi(vars["todoId"])
-    if (todoIdErr != nil) {
-      panic(todoIdErr)
-    }
-    t := RepoFindTodo(todoId)
+    s := RepoFindSchema(vars["schemaId"])
     w.Header().Set("Content-Type", "application/json; charset=UTF-8")
     w.WriteHeader(http.StatusCreated)
-    if err := json.NewEncoder(w).Encode(t); err != nil {
+    if err := json.NewEncoder(w).Encode(s); err != nil {
         panic(err)
     }
 }
 
-func TodoCreate(w http.ResponseWriter, r *http.Request) {
-    var todo Todo
+func SchemaCreate(w http.ResponseWriter, r *http.Request) {
+    var schema Schema
     body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1048576))
     if err != nil {
         panic(err)
@@ -45,18 +40,20 @@ func TodoCreate(w http.ResponseWriter, r *http.Request) {
     if err := r.Body.Close(); err != nil {
         panic(err)
     }
-    if err := json.Unmarshal(body, &todo); err != nil {
+    if err := json.Unmarshal(body, &schema); err != nil {
         w.Header().Set("Content-Type", "application/json; charset=UTF-8")
         w.WriteHeader(422) // unprocessable entity
         if err := json.NewEncoder(w).Encode(err); err != nil {
             panic(err)
         }
     }
-
-    t := RepoCreateTodo(todo)
+    s, err := RepoCreateSchema(schema)
+    if (err != nil) {
+      return
+    }
     w.Header().Set("Content-Type", "application/json; charset=UTF-8")
     w.WriteHeader(http.StatusCreated)
-    if err := json.NewEncoder(w).Encode(t); err != nil {
+    if err := json.NewEncoder(w).Encode(s); err != nil {
         panic(err)
     }
 }
