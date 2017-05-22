@@ -1,5 +1,10 @@
 package main
 
+type Schema struct {
+    Id      string    `json:"id"`
+    Schema  string    `json:"schema"`
+}
+
 type Response struct {
   Action string `json:"action"`
   Id string `json:"id"`
