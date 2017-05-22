@@ -5,6 +5,7 @@ import (
     "fmt"
     "errors"
     _ "github.com/lib/pq"
+    "os"
 )
 
 const (
