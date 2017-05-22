@@ -32,14 +32,8 @@ func StorageRetrieveSchema(schemaId string) Schema {
 func StorageWriteSchema(s Schema) {
   dbinfo := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable", DB_USER, DB_PASSWORD, DB_NAME)
   db, err := sql.Open("postgres", dbinfo)
-  defer db.Close()
   PanicIf(err)
+  defer db.Close()
   _, err = db.Exec("INSERT INTO schemas(id,schema) VALUES($1, $2)", s.Id, s.Schema)
   PanicIf(err)
-}
-
-func PanicIf(err error) {
-    if err != nil {
-        panic(err)
-    }
 }
