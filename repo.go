@@ -8,7 +8,7 @@ var schemas Schemas
 
 // Give us some seed data
 func init() {
-  RepoCreateSchema(Schema{Id:"swag", Schema:[]byte(`{"Name":"Alice","Body":"Hello","Time":1294706395881547000}`)})
+  RepoCreateSchema(Schema{Id:"swag", Schema:`{"Name":"Alice","Body":"Hello","Time":1294706395881547000}`})
 }
 
 func RepoFindSchema(id string) Schema {

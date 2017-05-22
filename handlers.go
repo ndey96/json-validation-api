@@ -18,7 +18,7 @@ func DownloadSchema(w http.ResponseWriter, r *http.Request) {
     action := "downloadSchema"
     vars := mux.Vars(r)
     id := vars["schemaId"]
-    s := RepoFindSchema(vars["schemaId"])
+    s := StorageRetrieveSchema(vars["schemaId"])
     if len(s.Id) == 0 {
       w.Header().Set("Content-Type", "application/json; charset=UTF-8")
       w.WriteHeader(http.StatusNotFound)
@@ -57,8 +57,8 @@ func UploadSchema(w http.ResponseWriter, r *http.Request) {
     }
     return
   }
-  schema.Schema = body
-  RepoCreateSchema(schema)
+  schema.Schema = string(body[:])
+  StorageWriteSchema(schema)
   w.Header().Set("Content-Type", "application/json; charset=UTF-8")
   w.WriteHeader(http.StatusCreated)
   res := Response{Action: action, Status: "success", Id: id}
