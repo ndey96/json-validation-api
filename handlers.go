@@ -58,7 +58,16 @@ func UploadSchema(w http.ResponseWriter, r *http.Request) {
     return
   }
   schema.Schema = string(body[:])
-  StorageWriteSchema(schema)
+  err = StorageWriteSchema(schema)
+  if (err != nil) {
+    w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+    w.WriteHeader(http.StatusCreated)
+    res := ResponseWithMessage{Action: action, Status: "error", Id: id, Message: err.Error()}
+    if err := json.NewEncoder(w).Encode(res); err != nil {
+      panic(err)
+    }
+    return
+  }
   w.Header().Set("Content-Type", "application/json; charset=UTF-8")
   w.WriteHeader(http.StatusCreated)
   res := Response{Action: action, Status: "success", Id: id}
