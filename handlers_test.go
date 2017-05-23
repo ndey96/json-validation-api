@@ -5,13 +5,12 @@ import (
     "net/http/httptest"
     "testing"
     "github.com/gorilla/mux"
+    "strings"
 )
 
 func init() {
   isTesting = true
 }
-
-type VarsHandler func (w http.ResponseWriter, r *http.Request, vars map[string]string)
 
 func TestDownloadSchema(t *testing.T) {
   db := OpenDBConn()
@@ -35,9 +34,8 @@ func TestDownloadSchema(t *testing.T) {
       t.Errorf("handler returned wrong status code: got %v want %v",
           status, http.StatusOK)
   }
-  expected := `{"id":"potato","schema":"tomato"}`
-  t.Log(w.Body.String())
-  if w.Body.String() != expected {
+  expected := `"tomato"`
+  if strings.Trim(w.Body.String(), "\n") != expected {
       t.Errorf("handler returned unexpected body: got %v want %v",
           w.Body.String(), expected)
   }

@@ -27,7 +27,7 @@ func DownloadSchema(w http.ResponseWriter, r *http.Request) {
       return
     }
     w.WriteHeader(http.StatusOK)
-    err := json.NewEncoder(w).Encode(s)
+    err := json.NewEncoder(w).Encode(s.Schema)
     PanicIf(err)
 }
 
