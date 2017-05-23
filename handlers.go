@@ -19,7 +19,7 @@ func DownloadSchema(w http.ResponseWriter, r *http.Request) {
     vars := mux.Vars(r)
     id := vars["schemaId"]
     s := StorageRetrieveSchema(vars["schemaId"])
-    if len(s.Id) == 0 {
+    if len(s.Id) == 0  || len(s.Schema) == 0 {
       w.WriteHeader(http.StatusNotFound)
       res := ResponseWithMessage{Action: action, Status: "error", Id: id, Message: "No schema found"}
       err := json.NewEncoder(w).Encode(res)

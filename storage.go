@@ -2,16 +2,8 @@ package main
 
 import (
     "database/sql"
-    "fmt"
     "errors"
     _ "github.com/lib/pq"
-    "os"
-)
-
-const (
-    DB_USER     = "postgres"
-    DB_PASSWORD = "postgres"
-    DB_NAME     = "jva"
 )
 
 func init() {
@@ -19,15 +11,18 @@ func init() {
 }
 
 func createTableIfNotExist() {
-  db := openDBConn()
+  db := OpenDBConn()
   defer db.Close()
   _, err := db.Exec("CREATE TABLE IF NOT EXISTS schemas(id TEXT UNIQUE, schema TEXT)")
   PanicIf(err)
 }
 
-func openDBConn() *sql.DB {
-  dbinfo := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable", DB_USER, DB_PASSWORD, DB_NAME)
-  db, err := sql.Open("postgres", dbinfo)
+func OpenDBConn() *sql.DB {
+  dbConnStr := APP_DB_CONN_STR
+  if isTesting {
+    dbConnStr = TEST_DB_CONN_STR
+  }
+  db, err := sql.Open("postgres", dbConnStr)
   PanicIf(err)
   err = db.Ping()
   PanicIf(err)
@@ -35,7 +30,7 @@ func openDBConn() *sql.DB {
 }
 
 func StorageRetrieveSchema(schemaId string) Schema {
-  db := openDBConn()
+  db := OpenDBConn()
   defer db.Close()
   var id, schema string
   err := db.QueryRow("SELECT id, schema FROM schemas WHERE id=$1", schemaId).Scan(&id,&schema)
@@ -47,7 +42,7 @@ func StorageRetrieveSchema(schemaId string) Schema {
 }
 
 func StorageWriteSchema(s Schema) error {
-  db := openDBConn()
+  db := OpenDBConn()
   defer db.Close()
   var id string
   err := db.QueryRow("SELECT id FROM schemas WHERE id=$1", s.Id).Scan(&id)
