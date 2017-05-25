@@ -1,4 +1,4 @@
-package jsonvalidation
+package main
 
 import (
   "testing"

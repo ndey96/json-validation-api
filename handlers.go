@@ -1,4 +1,4 @@
-package jsonvalidation
+package main
 
 import (
     "encoding/json"
@@ -21,7 +21,7 @@ func DownloadSchema(w http.ResponseWriter, r *http.Request) {
     s := StorageRetrieveSchema(vars["schemaId"])
     if len(s.Id) == 0  || len(s.Schema) == 0 {
       w.WriteHeader(http.StatusNotFound)
-      res := ResponseWithMessage{Action: action, Status: "error", Id: id, Message: "No schema found"}
+      res := ResponseWithMessage{action, "error", id, "No schema found"}
       err := json.NewEncoder(w).Encode(res)
       PanicIf(err)
       return
@@ -43,7 +43,7 @@ func UploadSchema(w http.ResponseWriter, r *http.Request) {
   var js map[string]interface{}
   if err := json.Unmarshal(body, &js); err != nil {
     w.WriteHeader(http.StatusUnprocessableEntity)
-    res := ResponseWithMessage{Action: action, Status: "error", Id: id, Message: "Invalid JSON provided"}
+    res := ResponseWithMessage{action, "error", id, "Invalid JSON provided"}
     err = json.NewEncoder(w).Encode(res)
     PanicIf(err)
     return
@@ -52,13 +52,13 @@ func UploadSchema(w http.ResponseWriter, r *http.Request) {
   err = StorageWriteSchema(schema)
   if (err != nil) {
     w.WriteHeader(http.StatusBadRequest)
-    res := ResponseWithMessage{Action: action, Status: "error", Id: id, Message: err.Error()}
+    res := ResponseWithMessage{action, "error", id, err.Error()}
     err = json.NewEncoder(w).Encode(res)
     PanicIf(err)
     return
   }
   w.WriteHeader(http.StatusCreated)
-  res := Response{Action: action, Status: "success", Id: id}
+  res := Response{action, "success", id}
   err = json.NewEncoder(w).Encode(res)
   PanicIf(err)
 }
@@ -76,7 +76,7 @@ func ValidateDocument(w http.ResponseWriter, r *http.Request) {
   var js map[string]interface{}
   if err := json.Unmarshal(document, &js); err != nil {
     w.WriteHeader(http.StatusUnprocessableEntity)
-    res := ResponseWithMessage{Action: action, Status: "error", Id: schemaId, Message: "Document is not valid JSON"}
+    res := ResponseWithMessage{action, "error", schemaId, "Document is not valid JSON"}
     err = json.NewEncoder(w).Encode(res)
     PanicIf(err)
     return
@@ -89,12 +89,12 @@ func ValidateDocument(w http.ResponseWriter, r *http.Request) {
 
   if result.Valid() {
     w.WriteHeader(http.StatusOK)
-    res := Response{Action: action, Status: "success", Id: schemaId}
+    res := Response{action, "success", schemaId}
     err = json.NewEncoder(w).Encode(res)
     PanicIf(err)
   } else {
     w.WriteHeader(http.StatusBadRequest)
-    res := ResponseWithMessage{Action: action, Status: "error", Id: schemaId, Message: "Document does not conform to schema"}
+    res := ResponseWithMessage{action, "error", schemaId, "Document does not conform to schema"}
     err = json.NewEncoder(w).Encode(res)
     PanicIf(err)
   }

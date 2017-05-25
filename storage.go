@@ -1,4 +1,4 @@
-package jsonvalidation
+package main
 
 import (
     "database/sql"
@@ -13,7 +13,7 @@ func init() {
 func createTableIfNotExist() {
   db := OpenDBConn()
   defer db.Close()
-  _, err := db.Exec("CREATE TABLE IF NOT EXISTS schemas(id TEXT UNIQUE, schema TEXT)")
+  _, err := db.Exec(CREATE_SCHEMAS_TABLE_IF_NOT_EXISTS_QUERY)
   PanicIf(err)
 }
 

@@ -1,4 +1,4 @@
-package jsonvalidation
+package main
 
 const (
     APP_DB_CONN_STR = "user=postgres password=postgres dbname=jva sslmode=disable"
