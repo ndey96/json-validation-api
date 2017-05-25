@@ -1,4 +1,4 @@
-package main
+package jsonvalidation
 
 type Schema struct {
     Id      string    `json:"id"`
