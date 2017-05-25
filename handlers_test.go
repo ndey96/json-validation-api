@@ -19,18 +19,8 @@ func TestDownloadSchema(t *testing.T) {
   db := OpenDBConn()
   defer db.Close()
   ResetTestSchemas(db, t)
-  _, err := db.Exec("INSERT INTO schemas (id, schema) VALUES('potato', 'tomato')")
-  FailIf(err, t)
-  req, err := http.NewRequest("GET", "/schema/potato", nil)
-  FailIf(err, t)
-  w := httptest.NewRecorder()
-  handler := http.HandlerFunc(DownloadSchema)
-  m := mux.NewRouter()
-	m.HandleFunc("/schema/{schemaId}", handler)
-	m.ServeHTTP(w, req)
-
-  ExpectValue(http.StatusOK, w.Code, "status", t)
-  ExpectValue(`"tomato"`, strings.Trim(w.Body.String(), "\n"), "body", t)
+  uploadValidSchema(t)
+  downloadValidSchema(t)
 }
 
 func TestUploadSchema(t *testing.T) {
@@ -38,85 +28,100 @@ func TestUploadSchema(t *testing.T) {
   db := OpenDBConn()
   defer db.Close()
   ResetTestSchemas(db, t)
-  handler := http.HandlerFunc(UploadSchema)
-  m := mux.NewRouter()
-  m.HandleFunc("/schema/{schemaId}", handler)
-  rawSchema, err := ioutil.ReadFile("./json/test-schema.json")
-  FailIf(err, t)
-
-  // upload a schema
-  req, err := http.NewRequest("POST", "/schema/test-schema", bytes.NewBuffer(rawSchema))
-  FailIf(err, t)
-  w := httptest.NewRecorder()
-  m.ServeHTTP(w, req)
-  ExpectValue(http.StatusCreated, w.Code, "status", t)
-  expectedBody := `{"action":"uploadSchema","id":"test-schema","status":"success"}`
-  ExpectValue(expectedBody, strings.Trim(w.Body.String(), "\n"), "body", t)
-
-  // upload a duplicate schema
-  req, err = http.NewRequest("POST", "/schema/test-schema", bytes.NewBuffer(rawSchema))
-  FailIf(err, t)
-  w = httptest.NewRecorder()
-  m.ServeHTTP(w, req)
-  ExpectValue(http.StatusBadRequest, w.Code, "status", t)
-  expectedBody = `{"action":"uploadSchema","id":"test-schema","status":"error","message":"Schema ID already in use"}`
-  ExpectValue(expectedBody, strings.Trim(w.Body.String(), "\n"), "body", t)
-
-  // upload an invalid schema
-  rawSchema, err = ioutil.ReadFile("./json/invalid-schema.json")
-  FailIf(err, t)
-  req, err = http.NewRequest("POST", "/schema/test-schema", bytes.NewBuffer(rawSchema))
-  FailIf(err, t)
-  w = httptest.NewRecorder()
-  m.ServeHTTP(w, req)
-  ExpectValue(http.StatusUnprocessableEntity, w.Code, "status", t)
-  expectedBody = `{"action":"uploadSchema","id":"test-schema","status":"error","message":"Invalid JSON provided"}`
-  ExpectValue(expectedBody, strings.Trim(w.Body.String(), "\n"), "body", t)
+  uploadValidSchema(t)
+  uploadDuplicateValidSchema(t)
+  uploadInvalidSchema(t)
 }
 
 func TestValidateDocument(t *testing.T) {
-  // setup
   db := OpenDBConn()
   defer db.Close()
   ResetTestSchemas(db, t)
-  m := mux.NewRouter()
+  uploadValidSchema(t)
+  validateValidDocument(t)
+  validateInvalidDocument(t)
+}
 
-  // upload a schema
-  handler := http.HandlerFunc(UploadSchema)
-  m.HandleFunc("/schema/{schemaId}", handler)
+func downloadValidSchema(t *testing.T) {
+  r := mux.NewRouter()
+  r.HandleFunc("/schema/{schemaId}", http.HandlerFunc(DownloadSchema))
+  req, err := http.NewRequest("GET", "/schema/test-schema", nil)
+  FailIf(err, t)
+  w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+  ExpectValue(http.StatusOK, w.Code, "status", t)
+  rawSchema, err := ioutil.ReadFile("./json/test-schema.json")
+  FailIf(err, t)
+  expectedBody := string(rawSchema)
+  ExpectValue(expectedBody, strings.Trim(w.Body.String(), "\n"), "body", t)
+}
+
+func uploadValidSchema(t *testing.T) {
+  r := mux.NewRouter()
+  r.HandleFunc("/schema/{schemaId}", http.HandlerFunc(UploadSchema))
   rawSchema, err := ioutil.ReadFile("./json/test-schema.json")
   FailIf(err, t)
   req, err := http.NewRequest("POST", "/schema/test-schema", bytes.NewBuffer(rawSchema))
   FailIf(err, t)
   w := httptest.NewRecorder()
-  m.ServeHTTP(w, req)
+  r.ServeHTTP(w, req)
   ExpectValue(http.StatusCreated, w.Code, "status", t)
   expectedBody := `{"action":"uploadSchema","id":"test-schema","status":"success"}`
   ExpectValue(expectedBody, strings.Trim(w.Body.String(), "\n"), "body", t)
+}
 
+func uploadDuplicateValidSchema(t *testing.T) {
+  r := mux.NewRouter()
+  r.HandleFunc("/schema/{schemaId}", http.HandlerFunc(UploadSchema))
+  rawSchema, err := ioutil.ReadFile("./json/test-schema.json")
+  FailIf(err, t)
+  req, err := http.NewRequest("POST", "/schema/test-schema", bytes.NewBuffer(rawSchema))
+  FailIf(err, t)
+  w := httptest.NewRecorder()
+  r.ServeHTTP(w, req)
+  ExpectValue(http.StatusBadRequest, w.Code, "status", t)
+  expectedBody := `{"action":"uploadSchema","id":"test-schema","status":"error","message":"Schema ID already in use"}`
+  ExpectValue(expectedBody, strings.Trim(w.Body.String(), "\n"), "body", t)
+}
 
-  handler = http.HandlerFunc(ValidateDocument)
-  m.HandleFunc("/validate/{schemaId}", handler)
+func uploadInvalidSchema(t *testing.T) {
+  r := mux.NewRouter()
+  r.HandleFunc("/schema/{schemaId}", http.HandlerFunc(UploadSchema))
+  rawSchema, err := ioutil.ReadFile("./json/invalid-schema.json")
+  FailIf(err, t)
+  req, err := http.NewRequest("POST", "/schema/test-schema", bytes.NewBuffer(rawSchema))
+  FailIf(err, t)
+  w := httptest.NewRecorder()
+  r.ServeHTTP(w, req)
+  ExpectValue(http.StatusUnprocessableEntity, w.Code, "status", t)
+  expectedBody := `{"action":"uploadSchema","id":"test-schema","status":"error","message":"Invalid JSON provided"}`
+  ExpectValue(expectedBody, strings.Trim(w.Body.String(), "\n"), "body", t)
+}
 
-  // validate valid document
+func validateValidDocument(t *testing.T) {
+  r := mux.NewRouter()
+  r.HandleFunc("/validate/{schemaId}", http.HandlerFunc(ValidateDocument))
   rawDocument, err := ioutil.ReadFile("./json/test.json")
   FailIf(err, t)
-  req, err = http.NewRequest("POST", "/validate/test-schema", bytes.NewBuffer(rawDocument))
+  req, err := http.NewRequest("POST", "/validate/test-schema", bytes.NewBuffer(rawDocument))
   FailIf(err, t)
-  w = httptest.NewRecorder()
-  m.ServeHTTP(w, req)
+  w := httptest.NewRecorder()
+  r.ServeHTTP(w, req)
   ExpectValue(http.StatusOK, w.Code, "status", t)
-  expectedBody = `{"action":"validateDocument","id":"test-schema","status":"success"}`
+  expectedBody := `{"action":"validateDocument","id":"test-schema","status":"success"}`
   ExpectValue(expectedBody, strings.Trim(w.Body.String(), "\n"), "body", t)
+}
 
-  // invalidate invalid document
-  rawDocument, err = ioutil.ReadFile("./json/test2.json")
+func validateInvalidDocument(t *testing.T) {
+  r := mux.NewRouter()
+  r.HandleFunc("/validate/{schemaId}", http.HandlerFunc(ValidateDocument))
+  rawDocument, err := ioutil.ReadFile("./json/test2.json")
   FailIf(err, t)
-  req, err = http.NewRequest("POST", "/validate/test-schema", bytes.NewBuffer(rawDocument))
+  req, err := http.NewRequest("POST", "/validate/test-schema", bytes.NewBuffer(rawDocument))
   FailIf(err, t)
-  w = httptest.NewRecorder()
-  m.ServeHTTP(w, req)
+  w := httptest.NewRecorder()
+  r.ServeHTTP(w, req)
   ExpectValue(http.StatusBadRequest, w.Code, "status", t)
-  expectedBody = `{"action":"validateDocument","id":"test-schema","status":"error","message":"Document does not conform to schema"}`
+  expectedBody := `{"action":"validateDocument","id":"test-schema","status":"error","message":"Document does not conform to schema"}`
   ExpectValue(expectedBody, strings.Trim(w.Body.String(), "\n"), "body", t)
 }
