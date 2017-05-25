@@ -22,8 +22,12 @@ GET     /schema/SCHEMAID        - Download JSON Schema with unique `SCHEMAID`
 POST    /validate/SCHEMAID      - Validate JSON document against the JSON Schema identified by `SCHEMAID`
 ```
 
-### Sample Requests:
+### Sample Requests
 
 - Upload Schema: `curl localhost:8080/schema/test-schema -X POST -d @json/test-schema.json`
 - Download Schema: `curl localhost:8080/schema/test-schema`
 - Validate Document `curl localhost:8080/validate/test-schema -X POST -d @json/test.json`
+
+### Sample JSON
+- [test-schema.json](https://github.com/ndey96/jsonvalidation/blob/master/json/test-schema.json)
+- [test.json](https://github.com/ndey96/jsonvalidation/blob/master/json/test.json)
