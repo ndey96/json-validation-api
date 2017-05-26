@@ -18,11 +18,11 @@ func DownloadSchema(w http.ResponseWriter, r *http.Request) {
     action := "downloadSchema"
     vars := mux.Vars(r)
     id := vars["schemaId"]
-    s := StorageRetrieveSchema(vars["schemaId"])
-    if len(s.Id) == 0  || len(s.Schema) == 0 {
+    s, err := StorageRetrieveSchema(vars["schemaId"])
+    if err != nil {
       w.WriteHeader(http.StatusNotFound)
-      res := ResponseWithMessage{Action: action, Status: "error", Id: id, Message: "No schema found"}
-      err := json.NewEncoder(w).Encode(res)
+      res := ResponseWithMessage{Action: action, Status: "error", Id: id, Message: err.Error()}
+      err = json.NewEncoder(w).Encode(res)
       PanicIf(err)
       return
     }
@@ -80,7 +80,14 @@ func ValidateDocument(w http.ResponseWriter, r *http.Request) {
     PanicIf(err)
     return
   }
-  schema := StorageRetrieveSchema(vars["schemaId"])
+  schema, err := StorageRetrieveSchema(vars["schemaId"])
+  if err != nil {
+    w.WriteHeader(http.StatusNotFound)
+    res := ResponseWithMessage{Action: action, Status: "error", Id: schemaId, Message: err.Error()}
+    err = json.NewEncoder(w).Encode(res)
+    PanicIf(err)
+    return
+  }
   documentLoader := gojsonschema.NewStringLoader(string(document[:]))
   schemaLoader := gojsonschema.NewStringLoader(schema.Schema)
   result, err := gojsonschema.Validate(schemaLoader, documentLoader)

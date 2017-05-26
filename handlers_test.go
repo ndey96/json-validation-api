@@ -41,6 +41,7 @@ func TestValidateDocument(t *testing.T) {
   uploadValidSchema(t)
   validateValidDocument(t)
   validateInvalidDocument(t)
+  validateInvalidSchema(t)
 }
 
 func downloadValidSchema(t *testing.T) {
@@ -65,7 +66,7 @@ func downloadInvalidSchema(t *testing.T) {
   w := httptest.NewRecorder()
   r.ServeHTTP(w, req)
   ExpectValue(http.StatusNotFound, w.Code, "status", t)
-  expectedBody := `{"action":"downloadSchema","id":"does-not-exist","status":"error","message":"No schema found"}`
+  expectedBody := `{"action":"downloadSchema","id":"does-not-exist","status":"error","message":"Schema not found"}`
   ExpectValue(expectedBody, strings.Trim(w.Body.String(), "\n"), "body", t)
 }
 
@@ -136,5 +137,19 @@ func validateInvalidDocument(t *testing.T) {
   r.ServeHTTP(w, req)
   ExpectValue(http.StatusBadRequest, w.Code, "status", t)
   expectedBody := `{"action":"validateDocument","id":"test-schema","status":"error","message":"Document does not conform to schema"}`
+  ExpectValue(expectedBody, strings.Trim(w.Body.String(), "\n"), "body", t)
+}
+
+func validateInvalidSchema(t *testing.T) {
+  r := mux.NewRouter()
+  r.HandleFunc("/validate/{schemaId}", http.HandlerFunc(ValidateDocument))
+  rawDocument, err := ioutil.ReadFile("./json/test.json")
+  FailIf(err, t)
+  req, err := http.NewRequest("POST", "/validate/does-not-exist", bytes.NewBuffer(rawDocument))
+  FailIf(err, t)
+  w := httptest.NewRecorder()
+  r.ServeHTTP(w, req)
+  ExpectValue(http.StatusNotFound, w.Code, "status", t)
+  expectedBody := `{"action":"validateDocument","id":"does-not-exist","status":"error","message":"Schema not found"}`
   ExpectValue(expectedBody, strings.Trim(w.Body.String(), "\n"), "body", t)
 }

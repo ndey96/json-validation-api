@@ -14,7 +14,8 @@ func TestStorageRetrieveSchema(t *testing.T) {
   ResetTestSchemas(db, t)
   _, err := db.Exec("INSERT INTO schemas (id, schema) VALUES('potato', 'tomato')")
   FailIf(err, t)
-  result := StorageRetrieveSchema("potato")
+  result, err := StorageRetrieveSchema("potato")
+  FailIf(err, t)
   if (result.Id != "potato" || result.Schema != "tomato") {
     t.Fatal()
   }

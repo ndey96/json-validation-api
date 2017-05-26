@@ -29,16 +29,18 @@ func OpenDBConn() *sql.DB {
   return db
 }
 
-func StorageRetrieveSchema(schemaId string) Schema {
+func StorageRetrieveSchema(schemaId string) (Schema, error) {
   db := OpenDBConn()
   defer db.Close()
   var id, schema string
   err := db.QueryRow("SELECT id, schema FROM schemas WHERE id=$1", schemaId).Scan(&id,&schema)
   if err == sql.ErrNoRows {
-    return Schema{}
+    err = errors.New("Schema not found")
+    return Schema{}, err
+  } else if err != nil {
+    return Schema{}, err
   }
-  PanicIf(err)
-  return Schema{Id:id, Schema:schema}
+  return Schema{Id:id, Schema:schema}, nil
 }
 
 func StorageWriteSchema(s Schema) error {
