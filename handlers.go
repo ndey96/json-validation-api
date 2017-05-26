@@ -14,22 +14,6 @@ func Index(w http.ResponseWriter, r *http.Request) {
     fmt.Fprintln(w, "Server is alive!")
 }
 
-func DownloadSchema(w http.ResponseWriter, r *http.Request) {
-    action := "downloadSchema"
-    vars := mux.Vars(r)
-    id := vars["schemaId"]
-    s, err := StorageRetrieveSchema(vars["schemaId"])
-    if err != nil {
-      w.WriteHeader(http.StatusNotFound)
-      res := ResponseWithMessage{Action: action, Status: "error", Id: id, Message: err.Error()}
-      err = json.NewEncoder(w).Encode(res)
-      PanicIf(err)
-      return
-    }
-    w.WriteHeader(http.StatusOK)
-    fmt.Fprintf(w, "%s", s.Schema)
-}
-
 func UploadSchema(w http.ResponseWriter, r *http.Request) {
   action := "uploadSchema"
   vars := mux.Vars(r)
@@ -60,6 +44,22 @@ func UploadSchema(w http.ResponseWriter, r *http.Request) {
   res := Response{Action: action, Status: "success", Id: id}
   err = json.NewEncoder(w).Encode(res)
   PanicIf(err)
+}
+
+func DownloadSchema(w http.ResponseWriter, r *http.Request) {
+    action := "downloadSchema"
+    vars := mux.Vars(r)
+    id := vars["schemaId"]
+    s, err := StorageRetrieveSchema(vars["schemaId"])
+    if err != nil {
+      w.WriteHeader(http.StatusNotFound)
+      res := ResponseWithMessage{Action: action, Status: "error", Id: id, Message: err.Error()}
+      err = json.NewEncoder(w).Encode(res)
+      PanicIf(err)
+      return
+    }
+    w.WriteHeader(http.StatusOK)
+    fmt.Fprintf(w, "%s", s.Schema)
 }
 
 func ValidateDocument(w http.ResponseWriter, r *http.Request) {
