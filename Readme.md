@@ -31,3 +31,9 @@ POST    /validate/SCHEMAID      - Validate JSON document against the JSON Schema
 ### Sample JSON
 - [test-schema.json](https://github.com/ndey96/jsonvalidation/blob/master/json/test-schema.json)
 - [test.json](https://github.com/ndey96/jsonvalidation/blob/master/json/test.json)
+
+### Running Tests
+```
+cd $GOPATH/src/github.com/ndey96/jsonvalidation
+go test -v
+```

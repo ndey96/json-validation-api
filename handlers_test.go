@@ -21,6 +21,7 @@ func TestDownloadSchema(t *testing.T) {
   ResetTestSchemas(db, t)
   uploadValidSchema(t)
   downloadValidSchema(t)
+  downloadInvalidSchema(t)
 }
 
 func TestUploadSchema(t *testing.T) {
@@ -53,6 +54,18 @@ func downloadValidSchema(t *testing.T) {
   rawSchema, err := ioutil.ReadFile("./json/test-schema.json")
   FailIf(err, t)
   expectedBody := string(rawSchema)
+  ExpectValue(expectedBody, w.Body.String(), "body", t)
+}
+
+func downloadInvalidSchema(t *testing.T) {
+  r := mux.NewRouter()
+  r.HandleFunc("/schema/{schemaId}", http.HandlerFunc(DownloadSchema))
+  req, err := http.NewRequest("GET", "/schema/does-not-exist", nil)
+  FailIf(err, t)
+  w := httptest.NewRecorder()
+  r.ServeHTTP(w, req)
+  ExpectValue(http.StatusNotFound, w.Code, "status", t)
+  expectedBody := `{"action":"downloadSchema","id":"does-not-exist","status":"error","message":"No schema found"}`
   ExpectValue(expectedBody, strings.Trim(w.Body.String(), "\n"), "body", t)
 }
 

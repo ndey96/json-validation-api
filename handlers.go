@@ -27,8 +27,7 @@ func DownloadSchema(w http.ResponseWriter, r *http.Request) {
       return
     }
     w.WriteHeader(http.StatusOK)
-    err := json.NewEncoder(w).Encode(s.Schema)
-    PanicIf(err)
+    fmt.Fprintf(w, "%s", s.Schema)
 }
 
 func UploadSchema(w http.ResponseWriter, r *http.Request) {
@@ -48,9 +47,9 @@ func UploadSchema(w http.ResponseWriter, r *http.Request) {
     PanicIf(err)
     return
   }
-  schema.Schema = string(body[:])
+  schema.Schema = string(body)
   err = StorageWriteSchema(schema)
-  if (err != nil) {
+  if err != nil {
     w.WriteHeader(http.StatusBadRequest)
     res := ResponseWithMessage{Action: action, Status: "error", Id: id, Message: err.Error()}
     err = json.NewEncoder(w).Encode(res)
